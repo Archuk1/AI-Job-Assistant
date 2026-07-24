@@ -1,6 +1,7 @@
+import { Markup } from 'telegraf';
 import { BotContext } from '../context';
 import { getUserWithProfile } from '../../services/user/userService';
-import { listJobsForUser } from '../../services/job/jobService';
+import { ensureJobAnalyzed, listJobsForUser } from '../../services/job/jobService';
 import { formatJobMessage } from '../formatJob';
 
 export async function jobsCommand(ctx: BotContext) {
@@ -19,6 +20,14 @@ export async function jobsCommand(ctx: BotContext) {
   }
 
   for (const job of jobs) {
-    await ctx.reply(formatJobMessage(job));
+    const analyzed = await ensureJobAnalyzed(job.id);
+    await ctx.reply(
+      formatJobMessage(analyzed),
+      Markup.inlineKeyboard([
+        Markup.button.callback('🎯 Відповідність', `match:${job.id}`),
+        Markup.button.callback('✉️ Лист', `cover:${job.id}`),
+        Markup.button.callback('❓ Питання', `ask:${job.id}`),
+      ]),
+    );
   }
 }

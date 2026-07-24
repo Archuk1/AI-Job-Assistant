@@ -6,6 +6,8 @@ interface JobLike {
   salaryMin: number | null;
   salaryMax: number | null;
   salaryCurrency: string | null;
+  aiSummary?: string | null;
+  aiComplexity?: string | null;
 }
 
 export function formatJobMessage(job: JobLike): string {
@@ -14,6 +16,9 @@ export function formatJobMessage(job: JobLike): string {
       ? `💰 ${job.salaryMin ?? '?'}–${job.salaryMax ?? '?'} ${job.salaryCurrency ?? ''}\n`
       : '';
   const location = job.location ? `📍 ${job.location}\n` : '';
+  const aiPart = job.aiSummary
+    ? `\n🤖 ${job.aiSummary}${job.aiComplexity ? ` (рівень: ${job.aiComplexity})` : ''}\n`
+    : '';
 
-  return `${job.title} — ${job.company}\n${salary}${location}${job.url}`;
+  return `${job.title} — ${job.company}\n${salary}${location}${aiPart}${job.url}`;
 }

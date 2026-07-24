@@ -1,6 +1,7 @@
 import { prisma } from '../../db/prisma';
 import { NormalizedJob } from '../../types/job';
 import { findOrCreateSkills } from '../skill/skillService';
+import { analyzeJob } from '../ai/aiService';
 import { logger } from '../../utils/logger';
 import { mapWithConcurrency } from '../../utils/concurrency';
 
@@ -59,6 +60,35 @@ export async function upsertJobs(jobs: NormalizedJob[]) {
 
   logger.info({ created: createdJobs.length, updated, total: jobs.length }, 'Jobs upserted into DB');
   return { created: createdJobs.length, updated, createdJobs };
+}
+
+export async function ensureJobAnalyzed(jobId: number): Promise<Job> {
+  const job = await prisma.job.findUniqueOrThrow({ where: { id: jobId } });
+  if (job.aiAnalyzedAt) {
+    return job;
+  }
+
+  try {
+    const analysis = await analyzeJob({
+      title: job.title,
+      company: job.company,
+      description: job.description,
+    });
+
+    return await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        aiSummary: analysis.summary,
+        aiRequirements: analysis.requirements,
+        aiComplexity: analysis.complexity,
+        aiKeySkills: analysis.keySkills,
+        aiAnalyzedAt: new Date(),
+      },
+    });
+  } catch (err) {
+    logger.error({ err, jobId }, 'Job analysis failed');
+    return job;
+  }
 }
 
 export async function listLatestJobs(limit = 10) {
