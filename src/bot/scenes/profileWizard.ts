@@ -1,12 +1,14 @@
 import { Scenes } from 'telegraf';
 import { message } from 'telegraf/filters';
 import { BotContext } from '../context';
-import { EnglishLevel, ExperienceLevel, WorkFormat } from '../../generated/prisma/enums';
+import { EnglishLevel, ExperienceLevel, Profession, WorkFormat } from '../../generated/prisma/enums';
 import {
   englishKeyboard,
   englishLabel,
   levelKeyboard,
   levelLabel,
+  professionKeyboard,
+  professionLabel,
   skillsKeyboard,
   workFormatKeyboard,
 } from '../keyboards';
@@ -15,6 +17,7 @@ import { saveProfile, setUserSkills, upsertUserFromTelegram } from '../../servic
 interface ProfileDraft {
   step?: 'country';
   level?: ExperienceLevel;
+  profession?: Profession;
   workFormats: WorkFormat[];
   country?: string;
   englishLevel?: EnglishLevel;
@@ -42,6 +45,14 @@ profileScene.action(/level:(.+)/, async (ctx) => {
   draft(ctx).level = level;
   await ctx.answerCbQuery();
   await ctx.editMessageText(`Рівень: ${levelLabel(level)}`);
+  await ctx.reply('Який напрям тобі найближчий?', professionKeyboard());
+});
+
+profileScene.action(/profession:(.+)/, async (ctx) => {
+  const profession = ctx.match[1] as Profession;
+  draft(ctx).profession = profession;
+  await ctx.answerCbQuery();
+  await ctx.editMessageText(`Напрям: ${professionLabel(profession)}`);
   await ctx.reply('Обери формати роботи (можна декілька), потім тисни «Далі ➡️»:', workFormatKeyboard([]));
 });
 
@@ -105,6 +116,7 @@ profileScene.action(/skill:(.+)/, async (ctx) => {
     const user = await upsertUserFromTelegram(ctx.from);
     await saveProfile(user.id, {
       level: d.level,
+      profession: d.profession,
       workFormats: d.workFormats,
       country: d.country,
       englishLevel: d.englishLevel,

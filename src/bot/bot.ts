@@ -6,7 +6,7 @@ import { BotContext } from './context';
 import { profileScene } from './scenes/profileWizard';
 import { startCommand } from './commands/start';
 import { profileCommand, profileEditAction } from './commands/profile';
-import { jobsCommand } from './commands/jobs';
+import { jobsCommand, jobsPageAction } from './commands/jobs';
 import { askAction, coverLetterAction, handleFreeTextQuestion, matchAction } from './commands/ai';
 
 export const bot = new Telegraf<BotContext>(env.TELEGRAM_BOT_TOKEN);
@@ -23,6 +23,7 @@ bot.action('profile:edit', profileEditAction);
 bot.action(/match:(\d+)/, matchAction);
 bot.action(/cover:(\d+)/, coverLetterAction);
 bot.action(/ask:(\d+)/, askAction);
+bot.action(/jobs:page:(\d+)/, jobsPageAction);
 bot.on(message('text'), (ctx) => handleFreeTextQuestion(ctx, ctx.message.text));
 
 bot.catch((err, ctx) => {

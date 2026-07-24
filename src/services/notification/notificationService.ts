@@ -4,22 +4,32 @@ import { formatJobMessage } from '../../bot/formatJob';
 import { logger } from '../../utils/logger';
 import { WorkFormat } from '../../generated/prisma/enums';
 
+const MIN_MATCHING_SKILLS = 2;
+
 async function findMatchingUsers(jobId: number, workFormat: WorkFormat | null) {
   const jobSkills = await prisma.jobSkill.findMany({
     where: { jobId },
     include: { skill: true },
   });
-  const skillNames = jobSkills.map((js) => js.skill.name.toLowerCase());
-  if (skillNames.length === 0) {
+  const jobSkillNames = new Set(jobSkills.map((js) => js.skill.name.toLowerCase()));
+  if (jobSkillNames.size === 0) {
     return [];
   }
 
-  return prisma.user.findMany({
+  const candidates = await prisma.user.findMany({
     where: {
       profile: workFormat ? { workFormats: { has: workFormat } } : undefined,
-      skills: { some: { skill: { name: { in: skillNames, mode: 'insensitive' } } } },
+      skills: { some: { skill: { name: { in: Array.from(jobSkillNames), mode: 'insensitive' } } } },
     },
-    select: { id: true, telegramId: true },
+    select: { id: true, telegramId: true, skills: { include: { skill: true } } },
+  });
+
+  // A single overlapping tag lets through a lot of noise (e.g. a sales role tagged
+  // "docker" among dozens of unrelated tags) — require at least two matches, but never
+  // more than the candidate has actually selected.
+  return candidates.filter((user) => {
+    const overlap = user.skills.filter((us) => jobSkillNames.has(us.skill.name.toLowerCase())).length;
+    return overlap >= Math.min(MIN_MATCHING_SKILLS, user.skills.length);
   });
 }
 

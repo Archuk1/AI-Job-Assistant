@@ -1,5 +1,5 @@
 import { fetchAllJobs } from '../services/parser';
-import { upsertJobs } from '../services/job/jobService';
+import { cleanupStaleJobs, upsertJobs } from '../services/job/jobService';
 import { notifyUsersAboutNewJobs } from '../services/notification/notificationService';
 import { logger } from '../utils/logger';
 
@@ -12,4 +12,6 @@ export async function refreshJobsAndNotify() {
   if (createdJobs.length > 0) {
     await notifyUsersAboutNewJobs(createdJobs.map((job) => job.id));
   }
+
+  await cleanupStaleJobs();
 }

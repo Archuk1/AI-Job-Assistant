@@ -1,4 +1,4 @@
-import { JobSource, WorkFormat } from '../generated/prisma/enums';
+import { ExperienceLevel, JobSource, WorkFormat } from '../generated/prisma/enums';
 
 export interface NormalizedJob {
   source: JobSource;
@@ -9,6 +9,7 @@ export interface NormalizedJob {
   description: string;
   location?: string;
   workFormat?: WorkFormat;
+  detectedLevel?: ExperienceLevel;
   salaryMin?: number;
   salaryMax?: number;
   salaryCurrency?: string;

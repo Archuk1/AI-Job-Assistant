@@ -1,10 +1,10 @@
 import { NormalizedJob } from '../../types/job';
 import { JobParser } from './types';
 import { douParser } from './adapters/dou';
-import { remoteOkParser } from './adapters/remoteok';
+import { workUaParser } from './adapters/workua';
 import { logger } from '../../utils/logger';
 
-export const parsers: JobParser[] = [remoteOkParser, douParser];
+export const parsers: JobParser[] = [douParser, workUaParser];
 
 export async function fetchAllJobs(): Promise<NormalizedJob[]> {
   const results = await Promise.allSettled(parsers.map((parser) => parser.fetchJobs()));

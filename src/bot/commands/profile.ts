@@ -1,7 +1,7 @@
 import { Markup } from 'telegraf';
 import { BotContext } from '../context';
 import { getUserWithProfile } from '../../services/user/userService';
-import { englishLabel, levelLabel, workFormatLabel } from '../keyboards';
+import { englishLabel, levelLabel, professionLabel, workFormatLabel } from '../keyboards';
 
 export async function profileCommand(ctx: BotContext) {
   if (!ctx.from) return;
@@ -15,6 +15,7 @@ export async function profileCommand(ctx: BotContext) {
   const { profile, skills } = user;
   const lines = [
     `Рівень: ${levelLabel(profile.level)}`,
+    `Напрям: ${profile.profession ? professionLabel(profile.profession) : '—'}`,
     `Формат роботи: ${profile.workFormats.map(workFormatLabel).join(', ') || '—'}`,
     `Країна/регіон: ${profile.country ?? '—'}`,
     `Англійська: ${englishLabel(profile.englishLevel)}`,

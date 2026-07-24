@@ -3,6 +3,9 @@ import { JobSource, WorkFormat } from '../../../generated/prisma/enums';
 import { NormalizedJob } from '../../../types/job';
 import { JobParser } from '../types';
 import { parserHttp } from '../http';
+import { parseUkrainianDate } from '../ukrainianDate';
+import { extractSkillsFromText } from '../skillExtraction';
+import { detectLevelFromText } from '../levelDetection';
 import { logger } from '../../../utils/logger';
 
 const DOU_VACANCIES_URL = 'https://jobs.dou.ua/vacancies/';
@@ -18,46 +21,6 @@ const DEFAULT_CATEGORIES = [
   'QA',
   'DevOps',
 ];
-
-const UKRAINIAN_MONTHS: Record<string, number> = {
-  січня: 0,
-  лютого: 1,
-  березня: 2,
-  квітня: 3,
-  травня: 4,
-  червня: 5,
-  липня: 6,
-  серпня: 7,
-  вересня: 8,
-  жовтня: 9,
-  листопада: 10,
-  грудня: 11,
-};
-
-function parseDouDate(text: string): Date | undefined {
-  const match = text.trim().match(/^(\d{1,2})\s+(\S+)$/u);
-  if (!match) {
-    return undefined;
-  }
-
-  const day = Number(match[1]);
-  const month = UKRAINIAN_MONTHS[match[2].toLowerCase()];
-  if (month === undefined) {
-    return undefined;
-  }
-
-  const now = new Date();
-  let year = now.getFullYear();
-  const candidate = new Date(year, month, day);
-
-  // If the parsed date lands more than a month in the future, the post is from last year
-  // (e.g. scraping a "грудня" listing in January).
-  if (candidate.getTime() - now.getTime() > 30 * 24 * 60 * 60 * 1000) {
-    year -= 1;
-  }
-
-  return new Date(year, month, day);
-}
 
 function extractExternalId(url: string): string | undefined {
   const match = url.match(/\/vacancies\/(\d+)/);
@@ -106,8 +69,9 @@ function parseCategoryPage(html: string, category: string): NormalizedJob[] {
       description,
       location: citiesText || undefined,
       workFormat: detectWorkFormat(citiesText),
-      publishedAt: parseDouDate(dateText),
-      tags: [category],
+      detectedLevel: detectLevelFromText(title),
+      publishedAt: parseUkrainianDate(dateText),
+      tags: Array.from(new Set([category, ...extractSkillsFromText(`${title} ${description}`)])),
     });
   });
 

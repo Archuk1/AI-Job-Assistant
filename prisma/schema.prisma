@@ -43,6 +43,18 @@ enum NotificationStatus {
   FAILED
 }
 
+enum Profession {
+  FRONTEND
+  BACKEND
+  FULLSTACK
+  MOBILE
+  DEVOPS
+  QA
+  DATA_SCIENCE
+  DESIGN
+  PROJECT_MANAGEMENT
+}
+
 model User {
   id         Int      @id @default(autoincrement())
   telegramId BigInt   @unique
@@ -61,6 +73,7 @@ model UserProfile {
   id           Int             @id @default(autoincrement())
   userId       Int             @unique
   level        ExperienceLevel
+  profession   Profession?
   workFormats  WorkFormat[]
   country      String?
   region       String?
@@ -93,21 +106,22 @@ model UserSkill {
 }
 
 model Job {
-  id             Int         @id @default(autoincrement())
+  id             Int              @id @default(autoincrement())
   source         JobSource
   externalId     String
   title          String
   company        String
-  url            String      @unique
-  description    String      @db.Text
+  url            String           @unique
+  description    String           @db.Text
   location       String?
   workFormat     WorkFormat?
+  detectedLevel  ExperienceLevel?
   salaryMin      Int?
   salaryMax      Int?
   salaryCurrency String?
   publishedAt    DateTime?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   aiSummary      String?          @db.Text
   aiRequirements String[]

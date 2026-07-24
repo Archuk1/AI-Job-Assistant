@@ -1,5 +1,5 @@
 import { prisma } from '../../db/prisma';
-import { EnglishLevel, ExperienceLevel, WorkFormat } from '../../generated/prisma/enums';
+import { EnglishLevel, ExperienceLevel, Profession, WorkFormat } from '../../generated/prisma/enums';
 import { findOrCreateSkills } from '../skill/skillService';
 
 export interface TelegramProfile {
@@ -40,6 +40,7 @@ export async function getUserWithProfile(telegramId: number) {
 
 export interface ProfileInput {
   level: ExperienceLevel;
+  profession?: Profession;
   workFormats: WorkFormat[];
   country?: string;
   region?: string;

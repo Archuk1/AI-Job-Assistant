@@ -1,6 +1,7 @@
 import { Markup } from 'telegraf';
-import { EnglishLevel, ExperienceLevel, WorkFormat } from '../generated/prisma/enums';
+import { EnglishLevel, ExperienceLevel, Profession, WorkFormat } from '../generated/prisma/enums';
 import { CURATED_SKILLS } from '../config/skills';
+import { PROFESSIONS } from '../config/professions';
 
 const LEVEL_LABELS: Record<ExperienceLevel, string> = {
   JUNIOR: 'Junior',
@@ -23,6 +24,17 @@ const ENGLISH_LABELS: Record<EnglishLevel, string> = {
   ADVANCED: 'Advanced (C1)',
   FLUENT: 'Fluent (C2)',
 };
+
+export function professionKeyboard() {
+  return Markup.inlineKeyboard(
+    PROFESSIONS.map((p) => Markup.button.callback(p.label, `profession:${p.id}`)),
+    { columns: 1 },
+  );
+}
+
+export function professionLabel(profession: Profession): string {
+  return PROFESSIONS.find((p) => p.id === profession)?.label ?? profession;
+}
 
 export function levelKeyboard() {
   return Markup.inlineKeyboard(
