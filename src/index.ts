@@ -2,6 +2,7 @@ import { createApp } from './app';
 import { env } from './config/env';
 import { logger } from './utils/logger';
 import { bot } from './bot/bot';
+import { startScheduler } from './jobs/scheduler';
 
 const app = createApp();
 
@@ -13,6 +14,8 @@ bot
   .launch()
   .then(() => logger.info('Telegram bot started (long polling)'))
   .catch((err) => logger.error(err, 'Failed to start Telegram bot'));
+
+startScheduler();
 
 function shutdown(signal: string) {
   logger.info(`Received ${signal}, shutting down`);

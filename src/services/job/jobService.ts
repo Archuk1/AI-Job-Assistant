@@ -4,7 +4,9 @@ import { findOrCreateSkills } from '../skill/skillService';
 import { logger } from '../../utils/logger';
 import { mapWithConcurrency } from '../../utils/concurrency';
 
-export async function upsertJob(normalized: NormalizedJob): Promise<{ created: boolean }> {
+type Job = Awaited<ReturnType<typeof prisma.job.upsert>>;
+
+export async function upsertJob(normalized: NormalizedJob): Promise<{ job: Job; created: boolean }> {
   const job = await prisma.job.upsert({
     where: { source_externalId: { source: normalized.source, externalId: normalized.externalId } },
     update: {
@@ -46,17 +48,17 @@ export async function upsertJob(normalized: NormalizedJob): Promise<{ created: b
     ]);
   }
 
-  return { created: job.createdAt.getTime() === job.updatedAt.getTime() };
+  return { job, created: job.createdAt.getTime() === job.updatedAt.getTime() };
 }
 
 export async function upsertJobs(jobs: NormalizedJob[]) {
   const results = await mapWithConcurrency(jobs, 8, upsertJob);
 
-  const created = results.filter((r) => r.created).length;
-  const updated = results.length - created;
+  const createdJobs = results.filter((r) => r.created).map((r) => r.job);
+  const updated = results.length - createdJobs.length;
 
-  logger.info({ created, updated, total: jobs.length }, 'Jobs upserted into DB');
-  return { created, updated };
+  logger.info({ created: createdJobs.length, updated, total: jobs.length }, 'Jobs upserted into DB');
+  return { created: createdJobs.length, updated, createdJobs };
 }
 
 export async function listLatestJobs(limit = 10) {
